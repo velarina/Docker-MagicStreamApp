@@ -6,7 +6,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 #install envsubst
-#RUN apk add --no-cache gettext
+RUN apk add --no-cache gettext
 
 COPY package*.json ./
 RUN npm install
@@ -18,7 +18,7 @@ COPY . .
 EXPOSE 5173
 
 #got command here for running react client
-CMD ["npm", "run", "dev", "--", "--host"]
+# CMD ["npm", "run", "dev", "--", "--host"]
 #CMD ["npm", "run", "dev", "--", "--host"]
 #generate env.js at runtime, then start dev server
-#CMD sh -c "envsubst < public/env.template.js > public/env.js && npm run dev -- --host"
+CMD sh -c "envsubst < public/env.template.js > public/env.js && npm run dev -- --host"
