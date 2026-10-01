@@ -1,32 +1,62 @@
 services:
   web:
-    image: magic-stream-web:1.0.0
-    container_name: magic-stream-web
+    depends_on:
+      - api
+    image: magic-stream-web-dev:1.0.0
+    container_name: magic -stream-web-dev
     ports:
       - "5173:5173"
 
     environment:
-      - API_URL=http://${API_HOST_IP}:8080
-
+      API_URL: "http://${API_HOST_IP}:8080"
+  
   api:
-    image: magic-stream-api:1.0.0
-    container_name: magic-stream-api
+    depends_on:
+      - db
+    image: magic-stream-api-dev:1.0.0
+    container_name: magic-stream-api-dev
     ports:
       - "8080:8080"
 
     environment:
       PORT: "8080"
-      #so when we use docker compose we want the relevant settings to be read into the containers
       SECRET_KEY: "${SECRET_KEY}"
       REFRESH_TOKEN_SECRET_KEY: "${REFRESH_TOKEN_SECRET_KEY}"
       OPENAI_API_KEY: "${OPENAI_API_KEY}"
       BASE_PROMPT_TEMPLATE: >
-        Return a response using one of these words : {rangkings}.
+        Return a response using one of these words: {rangkings}.
         The response should be a single word and should not contain any other text.
         The response should be based on the following review.
-      RECOMENDED_MOVIE_LIMIT: "5"
-      # MONGODB_URI: "mongodb://db:27017"
-      MONGODB_URI : "mongodb://host.docker.internal:27017"
-      DATABASE_NAME : "MagicStreamApp"
+      RECOMMENDED_MOVIE_LIMIT: "5"
+      MONGODB_URI: "mongodb://db:27017"
+      # MONGODB_URI: "mongodb://host.docker.internal:27017"
+      DATABASE_NAME: "magic-stream-movies"
       ALLOWED_ORIGINS: "${ALLOWED_ORIGINS}"
-      
+
+  db:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - movies:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 4
+
+  seed:
+    image: mongo:latest
+    container_name: seed_mongo
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./seed:/seed-data
+    command: >
+      mongosh mongodb://db:27017/magic-stream-movies /seed-data/seed.js
+    restart: "no"
+
+volumes:
+  movies:
