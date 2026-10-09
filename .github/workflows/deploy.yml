@@ -42,9 +42,11 @@ jobs:
               uses: docker/build-push-action@v6
               with:
                 context: Server/MagicStreamServer
-                file: ${{ github.worskapce }}//Server/MagicStreamServer/Dockerfile.prod
+                file: Server/MagicStreamServer/Dockerfile.prod
                 push: true
-                tags: velarin/magic-stream-api-prod:${{ steps.meta.outputs.version }}
+                tags: |
+                    velarin/magic-stream-api-prod:${{ github.sha }}
+                    velarin/magic-stream-api-prod:latest
 
             # - name: Setup SSH agent
             #   uses: webfactory/ssh-agent@v0.9.0
